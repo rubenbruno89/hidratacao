@@ -1,0 +1,120 @@
+<html><head><base href="https://websimdemo.com/water-reminder/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lembrete de Hidratação</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .container {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    max-width: 600px;
+    width: 100%;
+  }
+  h1 {
+    color: #0277bd;
+    text-align: center;
+  }
+  input, button {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  button {
+    background-color: #0277bd;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #01579b;
+  }
+  #waterAnimation {
+    width: 100px;
+    height: 100px;
+    margin: 20px auto;
+  }
+  #ntfyLink {
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Lembrete de Hidratação</h1>
+    <div id="waterAnimation"></div>
+    <input type="number" id="weight" placeholder="Seu peso em kg">
+    <input type="number" id="interval" placeholder="Intervalo de lembrete em minutos">
+    <input type="text" id="ntfyTopic" placeholder="Tópico ntfy (ex: minha-hidratacao)">
+    <button onclick="startReminder()">Iniciar Lembretes</button>
+    <p id="waterInfo"></p>
+    <p>Link ntfy: <span id="ntfyLink"></span></p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.14/lottie.min.js"></script>
+  <script>
+    let reminderInterval;
+    let waterNeeded;
+
+    function calculateWaterNeeded(weight) {
+      return weight * 35; // 35ml por kg de peso corporal
+    }
+
+    function startReminder() {
+      const weight = document.getElementById('weight').value;
+      const interval = document.getElementById('interval').value;
+      const ntfyTopic = document.getElementById('ntfyTopic').value;
+
+      if (!weight || !interval || !ntfyTopic) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+      }
+
+      waterNeeded = calculateWaterNeeded(weight);
+      document.getElementById('waterInfo').textContent = `Você deve beber aproximadamente ${waterNeeded}ml de água por dia.`;
+
+      clearInterval(reminderInterval);
+      reminderInterval = setInterval(() => sendReminder(ntfyTopic), interval * 60 * 1000);
+
+      const ntfyLink = `https://ntfy.sh/${ntfyTopic}`;
+      document.getElementById('ntfyLink').textContent = ntfyLink;
+
+      alert(`Lembretes configurados para cada ${interval} minutos. Acesse ${ntfyLink} para ver as notificações.`);
+    }
+
+    function sendReminder(topic) {
+      fetch(`https://ntfy.sh/${topic}`, {
+        method: 'POST',
+        body: 'Hora de beber água! 💧'
+      }).then(response => {
+        if (response.ok) {
+          console.log('Lembrete enviado com sucesso');
+        } else {
+          console.error('Erro ao enviar lembrete');
+        }
+      }).catch(error => console.error('Erro:', error));
+    }
+
+    // Animação da água
+    const waterAnimation = lottie.loadAnimation({
+      container: document.getElementById('waterAnimation'),
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: 'https://assets2.lottiefiles.com/packages/lf20_uwWgJY.json'
+    });
+  </script>
+</body></html>
